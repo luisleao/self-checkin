@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+	<title>GDG self-checkin</title>
+
+
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>	
+	<script src="http://labelwriter.com/software/dls/sdk/js/DYMO.Label.Framework.latest.js" type="text/javascript" charset="UTF-8"></script>
+
+
+	<script src="js/llqrcode.js"></script>	
+	<script src="js/webqr.js"></script>	
+
+	<script type="text/javascript">
+
+		var CLIENT_ID = '161435449296.apps.googleusercontent.com';
+		var SCOPES = [
+			'https://www.googleapis.com/auth/drive',
+			'https://www.googleapis.com/auth/drive.file',
+			'https://spreadsheets.google.com/feeds',
+		];
+
+		// Use your own API developer key.
+		var AUTH_TOKEN = null;
+		var AUTH = null;
+
+
+
+		var attendees = {};
+		var checked_attendees = {};
+
+		var arrayList = {};
+		var currentFile;
+
+
+		var printers = null;
+		var label_loaded = false;
+
+		var tmrCapture = null;
+		var tmrShowCheckin = null;
+		var tmrCounter = null;
+
+
+		$(document).ready(function(){
+			authButton = document.getElementById('authorizeButton');
+			pickerButton = document.getElementById('pickerButton');
+
+			printers = dymo.label.framework.getPrinters();
+			loadLabelFromWeb();
+			//TODO: exibir tela de entrada
+
+
+			if(isCanvasSupported())
+			{
+				initCanvas(800,600);
+				qrcode.callback = function(a) {
+					validateAttendee(a);
+				};
+			}
+
+
+			$("#begin").fadeIn();
+
+
+			tmrCounter = setInterval(function(){
+				total_checked = Object.keys(checked_attendees).length;
+				total_attendees = total_checked + Object.keys(attendees).length
+
+				$("h2 span").text(total_checked + "/" + total_attendees);
+			}, 500);
+
+
+			$(document).keypress(function(e) {
+				if(e.which == 13) {
+					if ($("#txtEmail").val() != "") {
+						validateAttendee($("#txtEmail").val());
+						$("#txtEmail").val("");
+					} else {
+						showCheckin();
+					}
+				}
+			});
+
+
+			//FILESYSTEM
+			// Note: The file system has been prefixed as of Google Chrome 12:
+			window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+			//window.requestFileSystem(type, size, successCallback, opt_errorCallback)
+
+			function onInitFs(fs) {
+				console.log('Opened file system: ' + fs.name);
+				window.fs = fs;
+
+				fs.root.getFile('credenciamento_'+new Date().toJSON()+'.txt', {create: true}, function(fileEntry) {
+					window.fileEntry = fileEntry;
+
+					// Create a FileWriter object for our FileEntry (log.txt).
+					fileEntry.createWriter(function(fileWriter) {
+
+						window.fileWriter = fileWriter;
+
+						fileWriter.onwriteend = function(e) {
+							console.log('Write completed.');
+						};
+
+						fileWriter.onerror = function(e) {
+							console.log('Write failed: ' + e.toString());
+						};
+
+						// Create a new Blob and write it to log.txt.
+						var blob = new Blob(['started ', new Date().toJSON(), '\n'], {type: 'text/plain'});
+						fileWriter.write(blob);
+
+
+					}, errorHandler);					
+
+
+				}, errorHandler);
+
+
+
+			}
+
+			function errorHandler(e)
+			{
+				console.log("Error", e);
+			}    
+
+			//window.requestFileSystem(window.PERSISTENT, 10*1024*1024 /*5MB*/, onInitFs, errorHandler);
+			window.webkitStorageInfo.requestQuota(PERSISTENT, 10%1024*1024, function(grantedBytes) {
+				window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+			}, function(e) {
+				console.log('Error', e);
+			});
+
+		});
+
+
+		function printLabel(attendee, company) {
+			if (printers.length == 0 || !label) return;
+
+			if (!company) company = "";
+
+			label.setObjectText("attendee", attendee);
+			label.setObjectText("company", company);
+			label.print(printers[0].name);
+		}
+
+		function loadLabelFromWeb() {                     
+			// use jQuery API to load label
+			$.get("youtubedevday.label", function(labelXml) {
+				label = dymo.label.framework.openLabelXml(labelXml);
+				label_loaded = true;
+				// check that label has an address object
+			}, "text");
+		}
+
+	      /**
+	       * Called when the client library is loaded to start the auth flow.
+	       */
+		function handleClientLoad() {
+			//window.setTimeout(checkAuth, 1);
+			gapi.client.load('drive', 'v2', function() {
+				console.log("loaded");
+				checkAuth();
+			});
+
+		}
+
+		/**
+		* Check if the current user has authorized the application.
+		*/
+		function checkAuth() {
+			gapi.auth.authorize(
+				{'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true},
+			handleAuthResult);
+		}
+
+		/**
+		* Called when authorization server replies.
+		*
+		* @param {Object} authResult Authorization result.
+		*/
+		function handleAuthResult(authResult) {
+
+			authButton.style.display = 'none';
+			pickerButton.style.display = 'none';
+
+			//var filePicker = document.getElementById('filePicker');
+			//filePicker.style.display = 'none';
+
+			if (authResult && !authResult.error) {
+				AUTH_TOKEN = authResult.access_token;
+
+				pickerButton.style.display = 'block';
+				pickerButton.onclick = function(){
+					createPicker();
+				};
+
+			} else {
+				// No access token could be retrieved, show the button to start the authorization flow.
+				authButton.style.display = 'block';
+				authButton.onclick = function() {
+					gapi.auth.authorize(
+						{'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false},
+					handleAuthResult);
+				};
+			}
+		}
+
+
+
+
+
+
+		/*
+
+		HOW TO PRINT MULTIPLE LABELS
+
+		var labelSet = new dymo.label.framework.LabelSetBuilder();
+
+		var record;
+		record = labelSet.addRecord();
+		record.setText("attendee", "Luis Leão");
+		record.setText("company", "GDG São Paulo");
+
+
+		record = labelSet.addRecord();
+		record.setText("attendee", "Paulo Fernandes");
+		record.setText("company", "GDG São Paulo");
+
+		label.print(printers[0].name, '', labelSet);
+
+		*/
+
+
+
+
+
+
+
+
+
+	    // Use the Google API Loader script to load the google.picker script.
+	    function loadPicker() {
+	      //gapi.load('picker', {'callback': createPicker});
+	      gapi.load('picker');
+	    }
+
+
+
+	    // Create and render a Picker object for searching images.
+	    function createPicker() {
+	      var view = new google.picker.View(google.picker.ViewId.SPREADSHEETS);
+	      //view.setMimeTypes("application/vnd.google-apps.spreadsheet");    
+	      
+	      var picker = new google.picker.PickerBuilder()
+	          .enableFeature(google.picker.Feature.NAV_HIDDEN)
+	          //.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+	          .setAppId(CLIENT_ID)
+	          //.setOAuthToken(gapi.auth.getToken().access_token) //Optional: The auth token used in the current Drive API session.
+	          .addView(view)
+	          .addView(new google.picker.DocsUploadView())
+	          .setCallback(pickerCallback)
+	          .setTitle("Open attendees list")
+	          .build();
+	       
+	       picker.setVisible(true);
+	    }
+
+	    // A simple callback implementation.
+	    function pickerCallback(data) {
+	      if (data.action == google.picker.Action.PICKED) {
+
+			pickerButton.style.display = 'none';
+
+	        var fileId = data.docs[0].id;
+	        currentFile = fileId;
+
+			var request = gapi.client.drive.files.get({
+				'fileId': fileId
+			});
+			request.execute(function(resp) {
+				var token = gapi.auth.getToken().access_token;
+
+				var urlWorkseets = 'https://spreadsheets.google.com/feeds/worksheets/' + resp.id + '/private/basic?alt=json-in-script&access_token=' + token + '&callback=?';
+				$.getJSON(urlWorkseets, function(data) {
+					window.worksheets = data;
+
+					var urlCells = data.feed.entry[0].link[1].href + '?alt=json-in-script&access_token=' + token + '&callback=?';
+					$("#planilha").empty().text("worksheet: '" + data.feed.entry[0].title.$t + "'");
+
+					$.getJSON(urlCells, function(data) {
+						window.listCells = data;
+
+						var patt=/([A-Z]{1,})(\d{1,})/;
+						for (index in listCells.feed.entry) {
+							var cell_data = listCells.feed.entry[index];
+							if (cell_data.title) {
+								var celula = cell_data.title.$t;
+								var cell = patt.exec(String(celula));
+
+								var col = cell[1];
+								var row = cell[2];
+								if (!arrayList[row]) {
+									arrayList[row] = {};
+								}
+								arrayList[row][col] = cell_data.content.$t;
+							}
+						}
+
+						attendees = {};
+						var arrayListKeys;
+						for (index in arrayList) {
+							if (index == "1") {
+								item_keys = Object.keys(arrayList[index]);
+							} else {
+								item = arrayList[index];
+								if (item[item_keys[0]]) {
+									var attendee = {};
+									for(var i=1,j=0; i<item_keys.length-1; i++, j++) {
+										attendee[j] = item[item_keys[i]];
+									}
+									attendees[item[item_keys[0]].toLowerCase()] = attendee;
+								}
+							}
+						}
+
+
+						console.log("attendee list completed!");
+						setwebcam();
+						$("#begin").fadeOut();
+						showCheckin();
+					});
+				});
+
+			});
+
+	      }
+	    }
+
+
+
+
+		function validateAttendee(id) {
+			id = id.toLowerCase();
+			if (attendees[id]) {
+				attendee = attendees[id];
+				checked_attendees[id] = attendee;
+
+				if (window.fileWriter) {
+					// saving file in localStorage (PERMANENT) to confirm checkin
+					// Create a new Blob and write it to log.txt.
+					var blob = new Blob([new Date().toJSON(),';', id, ';', JSON.stringify(attendee),'\n'], {type: 'text/plain'});
+					window.fileWriter.write(blob);
+				}
+
+
+				printLabel(attendee[0], attendee[1]);
+				delete(attendees[id]);
+				$("#checkin").fadeOut(function(){
+					$("#result").empty().append("olá " + attendee[0] + "!").fadeIn(function(){
+						tmrShowCheckin = setTimeout(showCheckin, 2000);
+					});
+				})
+
+			} else {
+				var mensagem = "registro não encontrado!"; //ID not found
+				if (checked_attendees[id]) {
+					mensagem = "checkin já realizado!"; //checkin already done
+				}
+
+				$("#checkin").fadeOut(function(){
+					$("#result").empty().append(mensagem).fadeIn(function(){
+						tmrShowCheckin = setTimeout(showCheckin, 3000);
+					});
+				})
+			}
+		}
+
+
+		function showCheckin() {
+			if (tmrShowCheckin)
+				clearTimeout(tmrShowCheckin);
+
+			if ($("#checkin").is(":visible")) {
+				$("#txtEmail").focus();
+				return;
+			}
+			$("#result").fadeOut();
+			$("#txtEmail").val("");
+			$("#checkin").fadeIn(function(){
+				$("#txtEmail").focus();
+			});
+			captureToCanvas(); 
+		}
+
+
+    </script>
+    
+    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+
+
+
+  </head>
+  <body>
+
+	<img src="img/hack.png" alt="" id="logo" />
+	<h1>retire sua credencial</h1>
+
+	<div id="begin">
+
+	    <input type="button" id="pickerButton" style="display: none" value="Choose Spreadsheet"/>
+	    <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
+
+	    <span id="planilha"></span>
+
+	</div>
+    <div id="checkin">
+    	<label>
+    		mostre o QRCode para a webcam ou digite seu e-mail informado no cadastro e pressione &lt;ENTER&gt;
+    		<!-- show the QRCode or type your e-mail and press ENTER -->
+    	</label>
+		<input type="text" id="txtEmail"></input>
+		<video id="v" autoplay></video>
+	</div>
+	<div id="result">
+		mensagem de texto
+	</div>
+
+	<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+	<link href='css/main.css' rel='stylesheet' type='text/css'>
+
+
+	<canvas id="qr-canvas" width="800" height="600" style="display: none;"></canvas>
+	<div id="outdiv"></div>
+
+	<h2>Desenvolvido pelo GDG São Paulo - Setembro/2013 <span><!-- # of checked attendees/total --></span> </h2>
+
+  </body>
+</html>
