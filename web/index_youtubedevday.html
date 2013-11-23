@@ -7,24 +7,15 @@
 
 
 	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>	
+	<script src="http://labelwriter.com/software/dls/sdk/js/DYMO.Label.Framework.latest.js" type="text/javascript" charset="UTF-8"></script>
 
 
-	
-	<script src="js/DYMO.Label.Framework.latest.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="js/llqrcode.js"></script>	
 	<script src="js/webqr.js"></script>	
 
-
-
-
-
 	<script type="text/javascript">
 
-		var CLIENT_ID_REMOTE = '161435449296.apps.googleusercontent.com';
-		var CLIENT_ID_LOCAL = '161435449296-3the66rqmokkivtp5g4l9vl9klg64nuj.apps.googleusercontent.com';
-		
-		var CLIENT_ID = location.hostname == "localhost" ? CLIENT_ID_LOCAL : CLIENT_ID_REMOTE;
-
+		var CLIENT_ID = '161435449296.apps.googleusercontent.com';
 		var SCOPES = [
 			'https://www.googleapis.com/auth/drive',
 			'https://www.googleapis.com/auth/drive.file',
@@ -159,7 +150,7 @@
 
 		function loadLabelFromWeb() {                     
 			// use jQuery API to load label
-			$.get("label.label", function(labelXml) {
+			$.get("youtubedevday.label", function(labelXml) {
 				label = dymo.label.framework.openLabelXml(labelXml);
 				label_loaded = true;
 				// check that label has an address object
@@ -417,7 +408,7 @@
   </head>
   <body>
 
-	<img src="img/androidmeetup.png" alt="" id="logo" />
+	<img src="img/hack.png" alt="" id="logo" />
 	<h1>retire sua credencial</h1>
 
 	<div id="begin">

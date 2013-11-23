@@ -1,0 +1,9 @@
+{
+  "name": "self-checkin",
+  "version": "0.0.1",
+  "dependencies": {
+    "socket.io": ">= 0",
+    "express": ">= 0",
+    "ejs": "~0.8.4"    
+  }
+}
