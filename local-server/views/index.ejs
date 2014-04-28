@@ -17,6 +17,8 @@
 	<style type="text/css">
 
 
+
+
 		html, body {
 			margin: 0;
 			padding: 0;
@@ -25,8 +27,10 @@
 			overflow: hidden;
 			font-family: Roboto;
 			font-size: 100%;
+			font-style: normal;
 			background-color: #000;
 			color: #fff;
+			-webkit-font-smoothing: antialiased;
 		}
 
 
@@ -35,13 +39,22 @@
 			top: 10%;
 			left: 2%;
 			width: 45%;
+			z-index: 99;
 		}
 
 		video {
 			position: absolute;
 			top: 0;
+			left: 0;
 			right: 0;
-			width: 50%;
+			bottom: 0;
+			width: 100%;
+
+			-moz-transform: scaleX(-1);
+			-o-transform: scaleX(-1);
+			-webkit-transform: scaleX(-1);
+			transform: scaleX(-1);
+
 		}
 
 
@@ -53,6 +66,7 @@
 			padding: 0;
 			bottom: 25%;
 			text-align: center;
+			font-weight: lighter;
 
 		}
 
@@ -66,6 +80,7 @@
 			padding: 0 0 .8em;
 			width: 100%;
 			text-align: center;
+			font-weight: lighter;
 		}
 
 		#checkin {
@@ -75,7 +90,7 @@
 			height: 20%;
 			left: 0;
 
-			background: linear-gradient(#000, #999); /* Standard syntax */
+			background: linear-gradient(transparent, rgba(0,0,0,.5)); /* Standard syntax */
 
 		}
 
@@ -95,7 +110,7 @@
 			border: solid 1px #fff;
 			padding: .2em;
 			font-size: 3em;
-			background-color: transparent;
+			background-color: #fff;
 		}
 
 
@@ -105,7 +120,7 @@
 
 
 
-	<img src="/img/devfest.png" alt="" id="logo" />
+	<img src="/img/gdgsaopaulo.png" alt="" id="logo" />
 	<video id="v" autoplay></video>
 	<h1></h1>
 	<h2>Desenvolvido pelo GDG São Paulo - Setembro/2013</h2>

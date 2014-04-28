@@ -20,6 +20,7 @@
 
 	<script type="text/javascript">
 
+		var DEVELOPER_KEY = "AIzaSyDbcxGwM9hrpa_IhggCU4YvohLdsLEE39o"; //"AIzaSyBUpwMSmFdBkD6tGwYcpcMDf79loU8s-IQ";
 		var CLIENT_ID_REMOTE = '161435449296.apps.googleusercontent.com';
 		var CLIENT_ID_LOCAL = '161435449296-3the66rqmokkivtp5g4l9vl9klg64nuj.apps.googleusercontent.com';
 		
@@ -29,6 +30,7 @@
 			'https://www.googleapis.com/auth/drive',
 			'https://www.googleapis.com/auth/drive.file',
 			'https://spreadsheets.google.com/feeds',
+			'https://www.googleapis.com/auth/drive.readonly'
 		];
 
 		// Use your own API developer key.
@@ -105,6 +107,9 @@
 				fs.root.getFile('credenciamento_'+new Date().toJSON()+'.txt', {create: true}, function(fileEntry) {
 					window.fileEntry = fileEntry;
 
+					// defining checkin url
+					$("h2 a").attr("href", "filesystem:http://luisleao.com.br/persistent" + fileEntry.fullPath);
+
 					// Create a FileWriter object for our FileEntry (log.txt).
 					fileEntry.createWriter(function(fileWriter) {
 
@@ -153,13 +158,13 @@
 			if (!company) company = "";
 
 			label.setObjectText("attendee", attendee);
-			label.setObjectText("company", company);
+			//label.setObjectText("company", company);
 			label.print(printers[0].name);
 		}
 
 		function loadLabelFromWeb() {                     
 			// use jQuery API to load label
-			$.get("label.label", function(labelXml) {
+			$.get("womentechmakers.label", function(labelXml) {
 				label = dymo.label.framework.openLabelXml(labelXml);
 				label_loaded = true;
 				// check that label has an address object
@@ -269,7 +274,8 @@
 	          .enableFeature(google.picker.Feature.NAV_HIDDEN)
 	          //.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
 	          .setAppId(CLIENT_ID)
-	          //.setOAuthToken(gapi.auth.getToken().access_token) //Optional: The auth token used in the current Drive API session.
+	          .setOAuthToken(gapi.auth.getToken().access_token) //Optional: The auth token used in the current Drive API session.
+	          .setDeveloperKey(DEVELOPER_KEY)
 	          .addView(view)
 	          .addView(new google.picker.DocsUploadView())
 	          .setCallback(pickerCallback)
@@ -417,7 +423,10 @@
   </head>
   <body>
 
-	<img src="img/androidmeetup.png" alt="" id="logo" />
+ 	<img src="img/androidmeetup.png" alt="" id="logo" />
+	<!--
+ 	<img id="logo" src="https://lh4.googleusercontent.com/-b7zuDox9pYk/Uv5RULGdAeI/AAAAAAAAAAA/IuwOZUDp0xE/w1200-h300/event_theme.jpg"></img>
+ 	-->
 	<h1>retire sua credencial</h1>
 
 	<div id="begin">
@@ -447,7 +456,7 @@
 	<canvas id="qr-canvas" width="800" height="600" style="display: none;"></canvas>
 	<div id="outdiv"></div>
 
-	<h2>Desenvolvido pelo GDG São Paulo - Setembro/2013 <span><!-- # of checked attendees/total --></span> </h2>
+	<h2>Desenvolvido pelo GDG São Paulo - Setembro/2013 <a href="#" target="_blank"><span><!-- # of checked attendees/total --></span></a></h2>
 
   </body>
 </html>

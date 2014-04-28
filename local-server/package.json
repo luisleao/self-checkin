@@ -5,5 +5,11 @@
     "socket.io": ">= 0",
     "express": ">= 0",
     "ejs": "~0.8.4"    
-  }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "main": "server.js"
+
 }

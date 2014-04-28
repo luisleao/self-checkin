@@ -12,6 +12,10 @@ var server_started = false;
 
 server.listen(3000);
 
+console.log("SERVER PORT: 3000");
+console.log("key=", KEY_ID);
+
+
 app.use(express.static(__dirname + "/public"));
 
 app.set("views", path.join(__dirname, "views"));

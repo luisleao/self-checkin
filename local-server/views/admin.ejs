@@ -43,6 +43,7 @@
 			display: table;
 			margin: 0;
 			padding: 0;
+			width: 100%;
 		}
 
 		#inscritos li {
@@ -78,7 +79,7 @@
 		#topo {
 			position: relative;
 			background-color: #efefef;
-			padding: 5px 250px;
+			padding: 5px 0 5px 55%;
 		}
 
 		#topo img {
@@ -104,10 +105,10 @@
 
 
 	<div id="topo">
-		<h1>self-checkin DevFest São Paulo 2013</h1>
+		<h1>self-checkin AppEngine+PHP</h1>
 		<h2 id="totalizador">inscrições total/confirmadas: <span></span></h2>
 		<h3>Desenvolvido pelo GDG São Paulo - Novembro/2013</h3>
-		<img src="/img/devfest.png" alt="" id="logo" />
+		<img src="/img/gdgsaopaulo.png" alt="" id="logo" />
 
 	</div>
 
@@ -183,7 +184,7 @@
 					attendee.etiqueta++;
 					update_ui();
 
-					result.mensagem = attendee.nome + "\naguarde ser chamado";
+					result.mensagem = attendee.nome + "\nretire sua badge!";
 				}
 			}
 
@@ -295,13 +296,13 @@
 
 				attendee.email = email;
 				attendee.nome = nome;
-				attendee.tipo = tipo;
-				attendee.tipo_inscricao = tipo_inscricao;
-				attendee.id_imasters = id_imasters
-				attendee.tamanho_camiseta = tamanho_camiseta;
-				attendee.valor_pago = valor_pago;
-				attendee.data_inscricao = data_inscricao;
-				attendee.status_inscricao = status_inscricao;
+				// attendee.tipo = tipo;
+				// attendee.tipo_inscricao = tipo_inscricao;
+				// attendee.id_imasters = id_imasters
+				// attendee.tamanho_camiseta = tamanho_camiseta;
+				// attendee.valor_pago = valor_pago;
+				// attendee.data_inscricao = data_inscricao;
+				// attendee.status_inscricao = status_inscricao;
 				attendee.credenciado = attendee.credenciado ? attendee.credenciado : null;
 				attendee.etiqueta = attendee.etiqueta ? attendee.etiqueta : 0;
 
@@ -344,8 +345,8 @@
 				itm.append($("<span/>").addClass("email").text(attendee.email));
 				itm.append($("<span/>").addClass("tipo").text(attendee.tipo));
 				itm.append($("<span/>").addClass("tipo_inscricao").text(attendee.tipo_inscricao));
-				itm.append($("<span/>").addClass("id_imasters").text("["+attendee.id_imasters+"]"));
-				itm.append($("<span/>").addClass("status_inscricao").text(attendee.status_inscricao));
+				// itm.append($("<span/>").addClass("id_imasters").text("["+attendee.id_imasters+"]"));
+				// itm.append($("<span/>").addClass("status_inscricao").text(attendee.status_inscricao));
 				itm.append($("<span/>").addClass("credenciado").text(attendee.credenciado ? attendee.credenciado : "-"));
 				itm.append($("<span/>").addClass("etiqueta").text(attendee.etiqueta ? attendee.etiqueta : "-"));
 
@@ -365,19 +366,21 @@
 			total_attendees = Object.keys(attendees).length;
 			$("#totalizador span").text(total_checked + "/" + total_attendees);
 
-
 		}
 
-
+		var DEVELOPER_KEY = "AIzaSyDbcxGwM9hrpa_IhggCU4YvohLdsLEE39o"; //"AIzaSyBUpwMSmFdBkD6tGwYcpcMDf79loU8s-IQ";
 		var CLIENT_ID_REMOTE = '161435449296.apps.googleusercontent.com';
-		var CLIENT_ID_LOCAL = '161435449296-3the66rqmokkivtp5g4l9vl9klg64nuj.apps.googleusercontent.com';
+		var CLIENT_ID_LOCAL = '161435449296-3n08sfgbvmh5885aitn19800u2bmd8it.apps.googleusercontent.com'; //'161435449296-d9g0mnlfcqtfe2t625ltn9ek4fsphkl5.apps.googleusercontent.com';
 
-		var CLIENT_ID = location.hostname == "luisleao.com.br" ? CLIENT_ID_REMOTE : CLIENT_ID_LOCAL;
+
+
+		var CLIENT_ID = CLIENT_ID_LOCAL; //location.hostname == "luisleao.com.br" ? CLIENT_ID_REMOTE : CLIENT_ID_LOCAL;
 
 		var SCOPES = [
 			'https://www.googleapis.com/auth/drive',
 			'https://www.googleapis.com/auth/drive.file',
 			'https://spreadsheets.google.com/feeds',
+			'https://www.googleapis.com/auth/drive.readonly'
 		];
 
 		// Use your own API developer key.
@@ -403,6 +406,7 @@
 
 
 		$(document).ready(function(){
+
 			authButton = document.getElementById('authorizeButton');
 			pickerButton = document.getElementById('pickerButton');
 
@@ -413,7 +417,6 @@
 
 			//tmrCounter = setInterval(update_counters, 5000);
 			//update_counters();
-
 
 
 			$(document).on( "click", "li", function(){ 
@@ -432,7 +435,7 @@
 					return;
 				}
 
-				if (!confirm("Deseja credenciar " + attendee.email + "\n\n" + attendee.nome + "\n" + attendee.tipo_inscricao))
+				if (!confirm("Deseja credenciar " + attendee.email + "\n\n" + attendee.nome))
 					return;
 
 
@@ -503,7 +506,7 @@
 
 		function loadLabelFromWeb() {                     
 			// use jQuery API to load label
-			$.get("/labels/devfest.label", function(labelXml) {
+			$.get("/labels/appenginephp.label", function(labelXml) {
 				label = dymo.label.framework.openLabelXml(labelXml);
 				label_loaded = true;
 				// check that label has an address object
@@ -527,9 +530,11 @@
 		* Called when the client library is loaded to start the auth flow.
 		*/
 		function handleClientLoad() {
+			console.log("handleClientLoad");
+
 			//window.setTimeout(checkAuth, 1);
 			gapi.client.load('drive', 'v2', function() {
-				console.log("loaded");
+				console.log("Google client loaded");
 				checkAuth();
 			});
 		}
@@ -538,6 +543,8 @@
 		* Check if the current user has authorized the application.
 		*/
 		function checkAuth() {
+			console.log("checkAuth");
+
 			gapi.auth.authorize(
 				{'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true},
 			handleAuthResult);
@@ -552,9 +559,10 @@
 		*/
 		function handleAuthResult(authResult) {
 
-			setTimeout(function(){
-				$("#begin").hide();
-			}, 5000);
+			console.log("*** handleAuthResult");
+			//setTimeout(function(){
+			//	$("#begin").hide();
+			//}, 5000);
 
 
 
@@ -602,7 +610,8 @@
 				.enableFeature(google.picker.Feature.NAV_HIDDEN)
 				//.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
 				.setAppId(CLIENT_ID)
-				//.setOAuthToken(gapi.auth.getToken().access_token) //Optional: The auth token used in the current Drive API session.
+				.setOAuthToken(gapi.auth.getToken().access_token) //Optional: The auth token used in the current Drive API session.
+				.setDeveloperKey(DEVELOPER_KEY)
 				.addView(view)
 				.addView(new google.picker.DocsUploadView())
 				.setCallback(pickerCallback)
@@ -695,7 +704,6 @@
 
 <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
 <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
-
 
 
 

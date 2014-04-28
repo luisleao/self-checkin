@@ -15,8 +15,8 @@ html, body {
 }
 
 body {
-	background-color: rgb(93,131,16);
-	color: #fff;
+	background-color: #fff;
+	color: rgb(93,131,16); /* 66, 133, 244 */
 }
 
 #logo {
@@ -43,6 +43,7 @@ h1 {
 #begin input {
 	display: block;
 	margin: 30px auto 0;
+	outline-width: 0;
 }
 
 #checkin, #result, #begin {
@@ -51,7 +52,8 @@ h1 {
 	width: 100%;
 	height: 30%;
 	display: none;
-	background-color: rgb(93,131,16);
+	background-color: rgb(255, 255, 255); /* 66, 133, 244 - 0, 190, 164*/
+	color: rgb(93,131,16); /* #fff */
 	/*box-shadow: 3px 3px 5px 6px #000;*/
 }
 
@@ -75,8 +77,8 @@ h1 {
 	padding: 0 5px;
 	font-size: 5em;
 	background-color: transparent;
-	color: #fff;
-	border: solid 1px #FFF;
+	color: rgb(93,131,16); /* #fff */
+	border: solid 1px rgb(93,131,16); /* #fff */
 	font-weight: 100;
 	outline: none;
 }
@@ -96,6 +98,11 @@ h2 {
 	margin: 0;
 	padding: 0;
 	font-size: 1em;
+	color: rgb(93,131,16); /* #fff */
+}
+
+h2 a {
+	color: inherit;
 }
 
 h2 span {
